@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '14.2.Rel1'
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Selectively clone submodules
+      run: |
+        git submodule update --init -- pico-sdk
+        git -C pico-sdk submodule update --init -- lib/tinyusb
+
+    - name: Build
+      run: |
+        cmake -B build
+        make -C build
+
+    - name: Store Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: picoports.uf2
+        path: build/picoports.uf2
