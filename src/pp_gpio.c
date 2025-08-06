@@ -20,8 +20,8 @@ TU_ATTR_UNUSED static const char *gpio_cmd2str(uint16_t cmd)
 	switch(cmd) {
 		case DLN2_GPIO_GET_PIN_COUNT: return "GET_PIN_COUNT";
 		case DLN2_GPIO_SET_DEBOUNCE: return "SET_DEBOUNCE";
-		case DLN2_GPIO_GET_DEBOUNCE: return "GET_DEBOUNCE";
-		case DLN2_GPIO_PORT_GET_VAL: return "PORT_GET_VAL";
+		case DLN2_GPIO_GET_DEBOUNCE: return "GET_DEBOUNCE"; /* Unused by kernel driver */
+		case DLN2_GPIO_PORT_GET_VAL: return "PORT_GET_VAL"; /* Unused by kernel driver */
 		case DLN2_GPIO_PIN_GET_VAL: return "PIN_GET_VAL";
 		case DLN2_GPIO_PIN_SET_OUT_VAL: return "PIN_SET_OUT_VAL";
 		case DLN2_GPIO_PIN_GET_OUT_VAL: return "PIN_GET_OUT_VAL";
@@ -31,7 +31,7 @@ TU_ATTR_UNUSED static const char *gpio_cmd2str(uint16_t cmd)
 		case DLN2_GPIO_PIN_SET_DIRECTION: return "PIN_SET_DIRECTION";
 		case DLN2_GPIO_PIN_GET_DIRECTION: return "PIN_GET_DIRECTION";
 		case DLN2_GPIO_PIN_SET_EVENT_CFG: return "PIN_SET_EVENT_CFG";
-		case DLN2_GPIO_PIN_GET_EVENT_CFG: return "PIN_GET_EVENT_CFG";
+		case DLN2_GPIO_PIN_GET_EVENT_CFG: return "PIN_GET_EVENT_CFG"; /* Unused by kernel driver */
 		default: return "???";
 	}
 }
@@ -71,7 +71,7 @@ static bool handle_request(uint16_t cmd, uint16_t *pin, uint8_t *val)
 			break;
 		case DLN2_GPIO_PIN_GET_VAL:
 			TU_VERIFY(*pin < NUM_GPIOS);
-			*val = !!gpio_get(gpio_pins[*pin]);
+			*val = gpio_get(gpio_pins[*pin]);
 			TU_LOG3("GPIO: Getting pin %u value: %u\r\n", *pin, *val);
 			break;
 		case DLN2_GPIO_PIN_SET_OUT_VAL:
@@ -213,13 +213,11 @@ static void gpio_callback(unsigned int gpio_id, uint32_t event_mask)
 	(void)event_mask;
 }
 
-bool pp_gpio_init(void)
+void pp_gpio_init(void)
 {
 	for (uint8_t i = 0; i < NUM_GPIOS; i++) {
 		gpio_init(gpio_pins[i]);
 	}
 	gpio_set_irq_callback(gpio_callback);
 	irq_set_enabled(IO_IRQ_BANK0, true);
-
-	return true;
 }

@@ -23,9 +23,7 @@ int main(void)
 		board_init_after_tusb();
 	}
 
-	if (!pp_gpio_init()) {
-		TU_LOG1("main: Failed to initialize GPIO module!\r\n");
-	}
+	pp_gpio_init();
 
 	while (1) {
 		tud_task();
