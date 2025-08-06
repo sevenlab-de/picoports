@@ -62,6 +62,16 @@
 
 #define DLN2_HW_ID			0x200
 
+enum dln2_handle {
+	DLN2_HANDLE_EVENT = 0,		/* don't change, hardware defined */
+	DLN2_HANDLE_CTRL,
+	DLN2_HANDLE_GPIO,
+	DLN2_HANDLE_I2C,
+	DLN2_HANDLE_SPI,
+	DLN2_HANDLE_ADC,
+	DLN2_HANDLES
+};
+
 // --- End of defines from Linux drivers/mfd/dln2.c ---
 
 #endif /* _PICOPORTS_DLN2_H_ */

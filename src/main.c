@@ -41,24 +41,15 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_contro
 	return false; /* stall */
 }
 
-enum handles {
-	HANDLE_EVENT = 0,
-	HANDLE_CTRL,
-	HANDLE_GPIO,
-	HANDLE_I2C,
-	HANDLE_SPI,
-	HANDLE_ADC
-};
-
 TU_ATTR_UNUSED static const char *handle2str(uint16_t handle)
 {
 	switch(handle) {
-		case HANDLE_EVENT: return "EVENT";
-		case HANDLE_CTRL: return "CTRL";
-		case HANDLE_GPIO: return "GPIO";
-		case HANDLE_I2C: return "I2C";
-		case HANDLE_SPI: return "SPI";
-		case HANDLE_ADC: return "ADC";
+		case DLN2_HANDLE_EVENT: return "EVENT";
+		case DLN2_HANDLE_CTRL: return "CTRL";
+		case DLN2_HANDLE_GPIO: return "GPIO";
+		case DLN2_HANDLE_I2C: return "I2C";
+		case DLN2_HANDLE_SPI: return "SPI";
+		case DLN2_HANDLE_ADC: return "ADC";
 		default: return "???";
 	}
 }
@@ -109,11 +100,11 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 
 	bool ok;
 	switch(handle) {
-		case HANDLE_CTRL:
+		case DLN2_HANDLE_CTRL:
 			ok = pp_ctrl_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
 			break;
 
-		case HANDLE_GPIO:
+		case DLN2_HANDLE_GPIO:
 			ok = pp_gpio_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
 			break;
 
