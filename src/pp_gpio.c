@@ -4,6 +4,7 @@
 
 #include "dln2.h"
 #include "byte_ops.h"
+#include "main.h"
 
 static uint8_t gpio_pins[] = {
 	/* 0 and 1 are used for UART logging */
@@ -31,6 +32,19 @@ TU_ATTR_UNUSED static const char *gpio_cmd2str(uint16_t cmd)
 		case DLN2_GPIO_PIN_GET_DIRECTION: return "PIN_GET_DIRECTION";
 		case DLN2_GPIO_PIN_SET_EVENT_CFG: return "PIN_SET_EVENT_CFG";
 		case DLN2_GPIO_PIN_GET_EVENT_CFG: return "PIN_GET_EVENT_CFG";
+		default: return "???";
+	}
+}
+
+TU_ATTR_UNUSED static const char *gpio_type2str(uint8_t type)
+{
+	switch(type) {
+		case DLN2_GPIO_EVENT_NONE: return "NONE";
+		case DLN2_GPIO_EVENT_CHANGE: return "CHANGE";
+		case DLN2_GPIO_EVENT_LVL_HIGH: return "LVL_HIGH";
+		case DLN2_GPIO_EVENT_LVL_LOW: return "LVL_LOW";
+		case DLN2_GPIO_EVENT_CHANGE_RISING: return "CHANGE_RISING";
+		case DLN2_GPIO_EVENT_CHANGE_FALLING: return "CHANGE_FALLING";
 		default: return "???";
 	}
 }
@@ -85,6 +99,12 @@ static bool handle_request(uint16_t cmd, uint16_t *pin, uint8_t *val)
 			*val = gpio_get_dir(gpio_pins[*pin]) ? DLN2_GPIO_DIRECTION_OUT : DLN2_GPIO_DIRECTION_IN;
 			TU_LOG3("GPIO: Getting pin %u direction: %s\r\n", *pin, gpio_dir2str(*val));
 			break;
+		case DLN2_GPIO_PIN_SET_EVENT_CFG:
+			/* The rising edge and falling edge triggers are not used by the kernel driver. */
+			TU_VERIFY(*val == DLN2_GPIO_EVENT_NONE || *val == DLN2_GPIO_EVENT_CHANGE);
+			TU_LOG3("GPIO: Setting event config for pin %u: type=%s (%u)\r\n", *pin, gpio_type2str(*val), *val);
+			gpio_set_irq_enabled(gpio_pins[*pin], GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, *val == DLN2_GPIO_EVENT_CHANGE);
+			break;
 		default:
 			TU_VERIFY(false);
 	}
@@ -127,11 +147,79 @@ bool pp_gpio_handle_request(uint16_t cmd, uint8_t const *data_in, uint16_t data_
 	return true;
 }
 
+static bool gpio_id_events[TU_ARRAY_SIZE(gpio_pins)];
+
+static bool take_pin_event(uint16_t *pin)
+{
+	uint16_t gpio_id;
+	bool event_found = false;
+
+	irq_set_enabled(IO_IRQ_BANK0, false);
+
+	for (uint16_t i = 0; i < TU_ARRAY_SIZE(gpio_id_events); i++) {
+		if (gpio_id_events[i] == true) {
+			gpio_id_events[i] = false;
+			gpio_id = i;
+			event_found = true;
+			break;
+		}
+	}
+
+	irq_set_enabled(IO_IRQ_BANK0, true);
+
+	if (!event_found)
+		return false;
+
+	// Get pin id from gpio_id.
+	for (uint16_t i = 0; i < TU_ARRAY_SIZE(gpio_pins); i++) {
+		if (gpio_id == gpio_pins[i]) {
+			*pin = i;
+			return true;
+		}
+	}
+
+	TU_LOG1("GPIO: Got gpio irq from unmapped GPIO pin.\r\n");
+	return false;
+}
+
+void gpio_process_events(void)
+{
+	uint16_t pin;
+
+	if (!take_pin_event(&pin))
+		return;
+
+	// Event payload:
+	//   0: u16 count
+	//   2: u8 type
+	//   3: u16 pin
+	//   5: u8 value
+	//   6
+	uint8_t data[6];
+	u16_to_buf_le(&data[0], 0); // Unused by kernel driver
+	data[2] = 0; // Unused by kernel driver
+	u16_to_buf_le(&data[3], pin);
+	data[5] = gpio_get(gpio_pins[pin]);
+
+	// unsolicited message, so no echo code
+	send_message_delayed(DLN2_GPIO_CONDITION_MET_EV, 0, DLN2_HANDLE_EVENT, data, 6);
+}
+
+static void gpio_callback(unsigned int gpio_id, uint32_t event_mask)
+{
+	gpio_id_events[gpio_id] = true;
+
+	TU_LOG3("GPIO: Pin %u has eventmask 0x%02" PRIx32 "\r\n", gpio_id, event_mask);
+	(void)event_mask;
+}
+
 bool pp_gpio_init(void)
 {
 	for (uint8_t i = 0; i < NUM_GPIOS; i++) {
 		gpio_init(gpio_pins[i]);
 	}
+	gpio_set_irq_callback(gpio_callback);
+	irq_set_enabled(IO_IRQ_BANK0, true);
 
 	return true;
 }

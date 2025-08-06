@@ -29,6 +29,7 @@ int main(void)
 
 	while (1) {
 		tud_task();
+		gpio_process_events();
 		send_delayed_messages();
 	}
 }
