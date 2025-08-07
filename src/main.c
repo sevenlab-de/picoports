@@ -7,6 +7,8 @@
 #include "pp_ctrl.h"
 #include "pp_gpio.h"
 
+static void send_delayed_messages(void);
+
 int main(void)
 {
 	board_init();
@@ -21,12 +23,12 @@ int main(void)
 		board_init_after_tusb();
 	}
 
-	if (!pp_gpio_init()) {
-		TU_LOG1("main: Failed to initialize GPIO module!\r\n");
-	}
+	pp_gpio_init();
 
 	while (1) {
 		tud_task();
+		gpio_process_events();
+		send_delayed_messages();
 	}
 }
 
@@ -41,55 +43,81 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_contro
 	return false; /* stall */
 }
 
-enum handles {
-	HANDLE_EVENT = 0,
-	HANDLE_CTRL,
-	HANDLE_GPIO,
-	HANDLE_I2C,
-	HANDLE_SPI,
-	HANDLE_ADC
-};
-
 TU_ATTR_UNUSED static const char *handle2str(uint16_t handle)
 {
 	switch(handle) {
-		case HANDLE_EVENT: return "EVENT";
-		case HANDLE_CTRL: return "CTRL";
-		case HANDLE_GPIO: return "GPIO";
-		case HANDLE_I2C: return "I2C";
-		case HANDLE_SPI: return "SPI";
-		case HANDLE_ADC: return "ADC";
+		case DLN2_HANDLE_EVENT: return "EVENT";
+		case DLN2_HANDLE_CTRL: return "CTRL";
+		case DLN2_HANDLE_GPIO: return "GPIO";
+		case DLN2_HANDLE_I2C: return "I2C";
+		case DLN2_HANDLE_SPI: return "SPI";
+		case DLN2_HANDLE_ADC: return "ADC";
 		default: return "???";
 	}
 }
 
-// Request:
-//   Header:
-//     0: u16 size
-//     2: u16 id
-//     4: u16 echo
-//     6: u16 handle
-//   Payload:
-//     8: u8[] data
-//
-// Response:
-//   Header:
-//     0: u16 size
-//     2: u16 id
-//     4: u16 echo
-//     6: u16 handle
-//     8: u16 response code
-//   Payload:
-//     10: u8[] data
-#define REQUEST_HEADER_SIZE 8
-#define RESPONSE_HEADER_SIZE 10
+#define MAX_NUM_BUFFERED_MESSAGES 16
+static uint8_t message_buffer[MAX_NUM_BUFFERED_MESSAGES * CFG_TUD_VENDOR_TX_BUFSIZE];
+static size_t r_id;
+static size_t w_id;
+
+static void send_delayed_messages(void)
+{
+	if (r_id == w_id)
+		return;
+
+	if (tud_vendor_write_available() != CFG_TUD_VENDOR_TX_BUFSIZE)
+		return;
+
+	uint8_t *message = &message_buffer[r_id];
+	uint16_t size = u16_from_buf_le(&message[0]);
+
+	tud_vendor_write(message, size);
+	tud_vendor_write_flush();
+
+	TU_LOG3("main: sent message = ");
+	TU_LOG3_BUF(message, size);
+
+	r_id += CFG_TUD_VENDOR_TX_BUFSIZE;
+	if (r_id >= sizeof(message_buffer))
+		r_id = 0;
+}
+
+// Header:
+//   0: u16 size
+//   2: u16 id
+//   4: u16 echo
+//   6: u16 handle
+// Payload:
+//   8: u8[] data
+// In request responses, data begins with a u16 response code.
+#define MSG_HDR_SZ 8
 // From the driver code, it seems all codes above 0x80 are failure codes.
 #define RESPONSE_CODE_OK 0
 #define RESPONSE_CODE_FAILED 0xFFFF
 
+void send_message_delayed(uint16_t cmd, uint16_t echo, enum dln2_handle handle, uint8_t *data, uint16_t data_len)
+{
+	TU_ASSERT(data_len <= CFG_TUD_VENDOR_TX_BUFSIZE-MSG_HDR_SZ,);
+
+	uint16_t size = MSG_HDR_SZ + data_len;
+
+	uint8_t *buf = &message_buffer[w_id];
+
+	u16_to_buf_le(&buf[0], size);
+	u16_to_buf_le(&buf[2], cmd);
+	u16_to_buf_le(&buf[4], echo);
+	u16_to_buf_le(&buf[6], handle);
+	memcpy(&buf[MSG_HDR_SZ], data, data_len);
+
+	w_id += CFG_TUD_VENDOR_TX_BUFSIZE;
+	if (w_id >= sizeof(message_buffer))
+		w_id = 0;
+}
+
 static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 {
-	TU_VERIFY(buf_in_size >= REQUEST_HEADER_SIZE);
+	TU_VERIFY(buf_in_size >= MSG_HDR_SZ);
 
 	uint16_t size = u16_from_buf_le(&buf_in[0]);
 	const uint16_t id = u16_from_buf_le(&buf_in[2]);
@@ -101,19 +129,20 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 	TU_LOG3("main: Request to handle %u (%s): command %u (size=%u, echo=%u)\r\n",
 		handle, handle2str(handle), id, size, echo); (void)echo;
 
-	const uint8_t *data_in = &buf_in[REQUEST_HEADER_SIZE];
-	uint16_t data_in_len = buf_in_size - REQUEST_HEADER_SIZE;
-	uint8_t buf_out[CFG_TUD_VENDOR_RX_BUFSIZE];
-	uint8_t *data_out = &buf_out[RESPONSE_HEADER_SIZE];
-	uint16_t data_out_len = TU_ARRAY_SIZE(buf_out) - RESPONSE_HEADER_SIZE;
+	const uint8_t *data_in = &buf_in[MSG_HDR_SZ];
+	uint16_t data_in_len = buf_in_size - MSG_HDR_SZ;
+	uint8_t buf_out[CFG_TUD_VENDOR_TX_BUFSIZE - MSG_HDR_SZ];
+	// We're going to insert the response code before the data_out.
+	uint8_t *data_out = &buf_out[2];
+	uint16_t data_out_len = TU_ARRAY_SIZE(buf_out) - 2;
 
 	bool ok;
 	switch(handle) {
-		case HANDLE_CTRL:
+		case DLN2_HANDLE_CTRL:
 			ok = pp_ctrl_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
 			break;
 
-		case HANDLE_GPIO:
+		case DLN2_HANDLE_GPIO:
 			ok = pp_gpio_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
 			break;
 
@@ -123,22 +152,14 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 			ok = false;
 			data_out_len = 0;
 	}
-	size = RESPONSE_HEADER_SIZE + data_out_len;
 
 	if (!ok) {
 		TU_LOG2("main: Failed to handle %s request\r\n", handle2str(handle));
 	}
 
-	u16_to_buf_le(&buf_out[0], size);
-	/* Copy request metadata to response while skipping the size. */
-	memcpy(&buf_out[2], &buf_in[2], REQUEST_HEADER_SIZE - 2);
-	u16_to_buf_le(&buf_out[8], ok ? RESPONSE_CODE_OK : RESPONSE_CODE_FAILED);
+	u16_to_buf_le(&buf_out[0], ok ? RESPONSE_CODE_OK : RESPONSE_CODE_FAILED);
 
-	TU_LOG3("main: buf_out = ");
-	TU_LOG3_BUF(buf_out, size);
-
-	tud_vendor_write(buf_out, size);
-	tud_vendor_write_flush();
+	send_message_delayed(id, echo, handle, buf_out, data_out_len + 2);
 
 	return true;
 }
