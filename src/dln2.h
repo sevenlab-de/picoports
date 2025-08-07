@@ -1,6 +1,7 @@
 #ifndef _PICOPORTS_DLN2_H_
 #define _PICOPORTS_DLN2_H_
 
+// clang-format off
 // --- Defines from Linux include/linux/mfd/dln2.h ---
 
 /* SPDX-License-Identifier: GPL-2.0 */
@@ -8,8 +9,9 @@
 #define DLN2_CMD(cmd, id)		((cmd) | ((id) << 8))
 
 // --- End of defines from Linux include/linux/mfd/dln2.h ---
+// clang-format on
 
-
+// clang-format off
 // --- Defines from Linux drivers/gpio/gpio-dln2.c ---
 
 // SPDX-License-Identifier: GPL-2.0-only
@@ -48,8 +50,9 @@
 #define DLN2_GPIO_DIRECTION_OUT		1
 
 // --- End of defines from Linux drivers/gpio/gpio-dln2.c ---
+// clang-format on
 
-
+// clang-format off
 // --- Defines from Linux drivers/mfd/dln2.c ---
 
 // SPDX-License-Identifier: GPL-2.0-only
@@ -81,5 +84,6 @@ enum dln2_handle {
 };
 
 // --- End of defines from Linux drivers/mfd/dln2.c ---
+// clang-format on
 
 #endif /* _PICOPORTS_DLN2_H_ */

@@ -2,8 +2,8 @@
 
 #include "bsp/board_api.h"
 
-#include "dln2.h"
 #include "byte_ops.h"
+#include "dln2.h"
 #include "pp_ctrl.h"
 #include "pp_gpio.h"
 
@@ -13,10 +13,8 @@ int main(void)
 {
 	board_init();
 
-	tusb_rhport_init_t dev_init = {
-		.role = TUSB_ROLE_DEVICE,
-		.speed = TUSB_SPEED_AUTO
-	};
+	tusb_rhport_init_t dev_init = { .role = TUSB_ROLE_DEVICE,
+					.speed = TUSB_SPEED_AUTO };
 	tusb_init(BOARD_TUD_RHPORT, &dev_init);
 
 	if (board_init_after_tusb) {
@@ -32,9 +30,12 @@ int main(void)
 	}
 }
 
-bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_control_request_t* request)
+bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage,
+				const tusb_control_request_t *request)
 {
-	(void)rhport; (void)stage; (void)request;
+	(void)rhport;
+	(void)stage;
+	(void)request;
 
 	/* Is this called at some point? */
 	TU_LOG1("==> tud_vendor_control_xfer_cb %u %u: ", rhport, stage);
@@ -45,19 +46,21 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, const tusb_contro
 
 TU_ATTR_UNUSED static const char *handle2str(uint16_t handle)
 {
-	switch(handle) {
-		case DLN2_HANDLE_EVENT: return "EVENT";
-		case DLN2_HANDLE_CTRL: return "CTRL";
-		case DLN2_HANDLE_GPIO: return "GPIO";
-		case DLN2_HANDLE_I2C: return "I2C";
-		case DLN2_HANDLE_SPI: return "SPI";
-		case DLN2_HANDLE_ADC: return "ADC";
-		default: return "???";
+	// clang-format off
+	switch (handle) {
+	case DLN2_HANDLE_EVENT: return "EVENT";
+	case DLN2_HANDLE_CTRL: return "CTRL";
+	case DLN2_HANDLE_GPIO: return "GPIO";
+	case DLN2_HANDLE_I2C: return "I2C";
+	case DLN2_HANDLE_SPI: return "SPI";
+	case DLN2_HANDLE_ADC: return "ADC";
+	default: return "???";
 	}
+	// clang-format on
 }
 
-#define MAX_NUM_BUFFERED_MESSAGES 16
-static uint8_t message_buffer[MAX_NUM_BUFFERED_MESSAGES * CFG_TUD_VENDOR_TX_BUFSIZE];
+#define MAX_NUM_BUF_MSGS 16
+static uint8_t message_buffer[MAX_NUM_BUF_MSGS * CFG_TUD_VENDOR_TX_BUFSIZE];
 static size_t r_id;
 static size_t w_id;
 
@@ -96,14 +99,14 @@ static void send_delayed_messages(void)
 #define RESPONSE_CODE_OK 0
 #define RESPONSE_CODE_FAILED 0xFFFF
 
-void send_message_delayed(uint16_t cmd, uint16_t echo, enum dln2_handle handle, uint8_t *data, uint16_t data_len)
+void send_message_delayed(uint16_t cmd, uint16_t echo, enum dln2_handle handle,
+			  uint8_t *data, uint16_t data_len)
 {
-	TU_ASSERT(data_len <= CFG_TUD_VENDOR_TX_BUFSIZE-MSG_HDR_SZ,);
-
-	uint16_t size = MSG_HDR_SZ + data_len;
+	TU_ASSERT(data_len <= CFG_TUD_VENDOR_TX_BUFSIZE - MSG_HDR_SZ, );
 
 	uint8_t *buf = &message_buffer[w_id];
 
+	uint16_t size = MSG_HDR_SZ + data_len;
 	u16_to_buf_le(&buf[0], size);
 	u16_to_buf_le(&buf[2], cmd);
 	u16_to_buf_le(&buf[4], echo);
@@ -127,7 +130,8 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 	TU_VERIFY(size == buf_in_size);
 
 	TU_LOG3("main: Request to handle %u (%s): command %u (size=%u, echo=%u)\r\n",
-		handle, handle2str(handle), id, size, echo); (void)echo;
+		handle, handle2str(handle), id, size, echo);
+	(void)echo;
 
 	const uint8_t *data_in = &buf_in[MSG_HDR_SZ];
 	uint16_t data_in_len = buf_in_size - MSG_HDR_SZ;
@@ -137,27 +141,31 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 	uint16_t data_out_len = TU_ARRAY_SIZE(buf_out) - 2;
 
 	bool ok;
-	switch(handle) {
-		case DLN2_HANDLE_CTRL:
-			ok = pp_ctrl_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
-			break;
+	switch (handle) {
+	case DLN2_HANDLE_CTRL:
+		ok = pp_ctrl_handle_request(id, data_in, data_in_len, data_out,
+					    &data_out_len);
+		break;
 
-		case DLN2_HANDLE_GPIO:
-			ok = pp_gpio_handle_request(id, data_in, data_in_len, data_out, &data_out_len);
-			break;
+	case DLN2_HANDLE_GPIO:
+		ok = pp_gpio_handle_request(id, data_in, data_in_len, data_out,
+					    &data_out_len);
+		break;
 
-		default:
-			TU_LOG1("main: Handle %u (%s) not implemented\r\n", handle,
-				handle2str(handle));
-			ok = false;
-			data_out_len = 0;
+	default:
+		TU_LOG1("main: Handle %u (%s) not implemented\r\n", handle,
+			handle2str(handle));
+		ok = false;
+		data_out_len = 0;
 	}
 
 	if (!ok) {
-		TU_LOG2("main: Failed to handle %s request\r\n", handle2str(handle));
+		TU_LOG2("main: Failed to handle %s request\r\n",
+			handle2str(handle));
 	}
 
-	u16_to_buf_le(&buf_out[0], ok ? RESPONSE_CODE_OK : RESPONSE_CODE_FAILED);
+	u16_to_buf_le(&buf_out[0],
+		      ok ? RESPONSE_CODE_OK : RESPONSE_CODE_FAILED);
 
 	send_message_delayed(id, echo, handle, buf_out, data_out_len + 2);
 
