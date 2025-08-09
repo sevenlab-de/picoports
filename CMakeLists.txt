@@ -15,6 +15,7 @@ add_executable(picoports)
 
 target_sources(picoports PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_adc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_ctrl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_gpio.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_descriptors.c
@@ -23,5 +24,12 @@ target_sources(picoports PUBLIC
 target_include_directories(picoports PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+target_link_libraries(picoports PUBLIC hardware_adc)
+
+option(USE_ADC_GPIOS "Enable the ADC for GP26/GP27/GP28")
+if(USE_ADC_GPIOS)
+target_compile_definitions(picoports PUBLIC USE_ADC_GPIOS=1)
+endif()
 
 family_configure_device_example(picoports noos)
