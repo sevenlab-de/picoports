@@ -163,12 +163,12 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 		TU_LOG1("main: Handle %u (%s) not implemented\r\n", handle,
 			handle2str(handle));
 		ok = false;
-		data_out_len = 0;
 	}
 
 	if (!ok) {
 		TU_LOG2("main: Failed to handle %s request\r\n",
 			handle2str(handle));
+		data_out_len = 0;
 	}
 
 	u16_to_buf_le(&buf_out[0],
