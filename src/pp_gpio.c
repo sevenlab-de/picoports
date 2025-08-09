@@ -8,8 +8,12 @@
 
 static uint8_t gpio_pins[] = {
 	/* 0 and 1 are used for UART logging */
-	2,  3,	4,  5,	6,  7,	8,  9,	10, 11, 12, 13, 14,
-	15, 16, 17, 18, 19, 20, 21, 22, 26, 27, 28, 25 /* LED */
+	2,  3,	4,  5,	6,  7,	8,  9,	10, 11, 12,
+	13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+#ifndef USE_ADC_GPIOS
+	26, 27, 28,
+#endif
+	25 // Pico LED
 };
 
 #define NUM_GPIOS TU_ARRAY_SIZE(gpio_pins)

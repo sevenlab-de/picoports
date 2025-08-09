@@ -4,6 +4,7 @@
 
 #include "byte_ops.h"
 #include "dln2.h"
+#include "pp_adc.h"
 #include "pp_ctrl.h"
 #include "pp_gpio.h"
 
@@ -22,6 +23,7 @@ int main(void)
 	}
 
 	pp_gpio_init();
+	pp_adc_init();
 
 	while (1) {
 		tud_task();
@@ -142,6 +144,11 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 
 	bool ok;
 	switch (handle) {
+	case DLN2_HANDLE_ADC:
+		ok = pp_adc_handle_request(id, data_in, data_in_len, data_out,
+					   &data_out_len);
+		break;
+
 	case DLN2_HANDLE_CTRL:
 		ok = pp_ctrl_handle_request(id, data_in, data_in_len, data_out,
 					    &data_out_len);
@@ -156,12 +163,12 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 		TU_LOG1("main: Handle %u (%s) not implemented\r\n", handle,
 			handle2str(handle));
 		ok = false;
-		data_out_len = 0;
 	}
 
 	if (!ok) {
 		TU_LOG2("main: Failed to handle %s request\r\n",
 			handle2str(handle));
+		data_out_len = 0;
 	}
 
 	u16_to_buf_le(&buf_out[0],

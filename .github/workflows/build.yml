@@ -2,7 +2,15 @@ name: Build
 
 on:
   workflow_call:
+    inputs:
+      USE_ADC_GPIOS:
+        type: boolean
+        description: Enable the ADC for GP26/GP27/GP28
   workflow_dispatch:
+    inputs:
+      USE_ADC_GPIOS:
+        type: boolean
+        description: Enable the ADC for GP26/GP27/GP28
 
 jobs:
   build:
@@ -23,11 +31,16 @@ jobs:
 
     - name: Build
       run: |
-        cmake -B build
-        make -C build
+        if [ ${{inputs.USE_ADC_GPIOS}} == true ]; then
+          USE_ADC_GPIOS=1
+        else
+          USE_ADC_GPIOS=0
+        fi
+        cmake -B build -DUSE_ADC_GPIOS=${USE_ADC_GPIOS}
+        make -C build -j $(nproc)
+        mv build/picoports.uf2 build/picoports_ADC=${USE_ADC_GPIOS}.uf2
 
     - name: Store Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: picoports.uf2
-        path: build/picoports.uf2
+        path: build/picoports*.uf2

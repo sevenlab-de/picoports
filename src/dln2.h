@@ -12,6 +12,35 @@
 // clang-format on
 
 // clang-format off
+// --- Defines from Linux drivers/iio/adc/dln2-adc.c ---
+
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Driver for the Diolan DLN-2 USB-ADC adapter
+ *
+ * Copyright (c) 2017 Jack Andersen
+ */
+
+#define DLN2_ADC_ID             0x06
+
+#define DLN2_ADC_GET_CHANNEL_COUNT	DLN2_CMD(0x01, DLN2_ADC_ID)
+#define DLN2_ADC_ENABLE			DLN2_CMD(0x02, DLN2_ADC_ID)
+#define DLN2_ADC_DISABLE		DLN2_CMD(0x03, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_ENABLE		DLN2_CMD(0x05, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_DISABLE	DLN2_CMD(0x06, DLN2_ADC_ID)
+#define DLN2_ADC_SET_RESOLUTION		DLN2_CMD(0x08, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_GET_VAL	DLN2_CMD(0x0A, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_GET_ALL_VAL	DLN2_CMD(0x0B, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_SET_CFG	DLN2_CMD(0x0C, DLN2_ADC_ID)
+#define DLN2_ADC_CHANNEL_GET_CFG	DLN2_CMD(0x0D, DLN2_ADC_ID)
+#define DLN2_ADC_CONDITION_MET_EV	DLN2_CMD(0x10, DLN2_ADC_ID)
+
+#define DLN2_ADC_DATA_BITS 10
+
+// --- End of defines from Linux drivers/iio/adc/dln2-adc.c ---
+// clang-format on
+
+// clang-format off
 // --- Defines from Linux drivers/gpio/gpio-dln2.c ---
 
 // SPDX-License-Identifier: GPL-2.0-only
