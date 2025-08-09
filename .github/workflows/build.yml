@@ -29,18 +29,23 @@ jobs:
         git submodule update --init -- pico-sdk
         git -C pico-sdk submodule update --init -- lib/tinyusb
 
-    - name: Build
+    - name: Construct firmware name
+      id: fw_name
       run: |
         if [ ${{inputs.USE_ADC_GPIOS}} == true ]; then
-          USE_ADC_GPIOS=1
+          echo "FW_NAME=picoports_GPIO+ADC" >> "$GITHUB_OUTPUT"
         else
-          USE_ADC_GPIOS=0
+          echo "FW_NAME=picoports_GPIO" >> "$GITHUB_OUTPUT"
         fi
-        cmake -B build -DUSE_ADC_GPIOS=${USE_ADC_GPIOS}
+
+    - name: Build
+      run: |
+        cmake -B build -DUSE_ADC_GPIOS=${{inputs.USE_ADC_GPIOS}}
         make -C build -j $(nproc)
-        mv build/picoports.uf2 build/picoports_ADC=${USE_ADC_GPIOS}.uf2
+        mv build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2
 
     - name: Store Build Artifact
       uses: actions/upload-artifact@v4
       with:
+        name: ${{ steps.fw_name.outputs.FW_NAME }}
         path: build/picoports*.uf2
