@@ -7,7 +7,7 @@
 #include "dln2.h"
 
 static const uint8_t adc_gpios[] = {
-#ifdef USE_ADC_GPIOS
+#ifndef PP_GPIO_ONLY
 	26, 27, 28,
 #endif
 	29 // 1/3 voltage divider on VSYS

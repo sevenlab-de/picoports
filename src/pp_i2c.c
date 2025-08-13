@@ -7,7 +7,7 @@
 #include "byte_ops.h"
 #include "dln2.h"
 
-#ifdef USE_I2C_GPIOS
+#ifndef PP_GPIO_ONLY
 #include "hardware/i2c.h"
 #endif
 
@@ -47,7 +47,7 @@ bool pp_i2c_handle_request(uint16_t cmd, uint8_t const *data_in,
 	uint8_t port = data_in[0];
 	TU_VERIFY(port == 0); // always 0 in kernel driver
 
-#ifndef USE_I2C_GPIOS
+#ifdef PP_GPIO_ONLY
 	(void)cmd;
 	(void)data_out;
 	(void)data_out_len;
@@ -146,7 +146,7 @@ bool pp_i2c_handle_request(uint16_t cmd, uint8_t const *data_in,
 
 int pp_i2c_init()
 {
-#ifdef USE_I2C_GPIOS
+#ifndef PP_GPIO_ONLY
 	i2c_init(PP_I2C_INST, PP_I2C_SPEED_100KHZ);
 	gpio_set_function(PP_I2C_PIN_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(PP_I2C_PIN_SCL, GPIO_FUNC_I2C);

@@ -10,10 +10,10 @@ jobs:
   build:
     strategy:
       matrix:
-        USE_ADC_GPIOS: [false, true]
+        GPIO_ONLY: [false, true]
     uses: ./.github/workflows/build.yml
     with:
-      USE_ADC_GPIOS: ${{ matrix.USE_ADC_GPIOS }}
+      GPIO_ONLY: ${{ matrix.GPIO_ONLY }}
 
   release:
     runs-on: ubuntu-latest

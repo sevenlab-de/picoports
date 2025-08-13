@@ -28,15 +28,11 @@ target_include_directories(picoports PUBLIC
 
 target_link_libraries(picoports PUBLIC hardware_adc)
 
-option(USE_ADC_GPIOS "Enable the ADC for GP26/GP27/GP28")
-if(USE_ADC_GPIOS)
-target_compile_definitions(picoports PUBLIC USE_ADC_GPIOS=1)
-endif()
-
-option(USE_I2C_GPIOS "Enable I2C on GP16/GP17")
-if(USE_I2C_GPIOS)
+option(GPIO_ONLY "Disable the ADC and I2C")
+if(GPIO_ONLY)
+target_compile_definitions(picoports PUBLIC PP_GPIO_ONLY=1)
+else()
 target_link_libraries(picoports PUBLIC hardware_i2c)
-target_compile_definitions(picoports PUBLIC USE_I2C_GPIOS=1)
 endif()
 
 family_configure_device_example(picoports noos)
