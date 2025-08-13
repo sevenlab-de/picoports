@@ -4,17 +4,63 @@ A GPIO-Expander (GPIO-Breakout) via USB based on Raspberry Pi Pico 1.
 
 ## Usage
 
-Switch on Pico LED:
+### GPIO
+
+Example: Read GP2
+
+```bash
+gpioget gpiochip0 0
+```
+
+Example: Set GP10 high for 1 second (gpio states persist after gpioset command exits)
+
+```bash
+gpioset gpiochip0 8=1
+sleep 1
+gpioset gpiochip0 8=0
+```
+
+Special case: Switch on Pico LED (connected to GP25)
 
 ```bash
 gpioset gpiochip0 24=1
 ```
 
-| gpiochip line |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |    24 |
-|---------------|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
+The gpiochip line number depends on the firmware variant:
+
 | Pico pin GP_  | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* |
+|---------------|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
+| gpiochip line (GPIO) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |    24 |
+| gpiochip line (GPIO+ADC) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |    - |    - |    - |    21 |
 
 $*$ GP25 is connected to the LED on the Pico
+
+### ADC
+
+Example: Analog read of GP26/ADC0 (in volt)
+
+```bash
+echo "$(cat /sys/bus/iio/devices/iio:device0/in_voltage0_raw) * $(cat /sys/bus/iio/devices/iio:device0/scale)" | bc
+```
+
+Special case: Analog read of Pico VSYS (in volt)
+
+```bash
+echo "$(cat /sys/bus/iio/devices/iio:device0/in_voltage3_raw) * $(cat /sys/bus/iio/devices/iio:device0/scale) * 3" | bc
+```
+
+Special case: Analog read of Pico onboard temperature sensor (in degree Celsius)
+
+```bash
+echo "27.0 - ($(cat /sys/bus/iio/devices/iio:device0/in_voltage4_raw) * $(cat /sys/bus/iio/devices/iio:device0/scale) - 0.706) / 0.001721" | bc
+```
+
+The voltage index (`X` in `in_voltageX_raw`) depends on the firmware variant:
+
+| Pico Pin                 | GP26/ADC0 | GP27/ADC1 | GP28/ADC2 | VSYS/3 | int. temp. |
+|--------------------------|-----------|-----------|-----------|--------|------------|
+| voltage index (GPIO+ADC) |         0 |         1 |         2 |      3 |          4 |
+| voltage index (GPIO)     |         - |         - |         - |      0 |          1 |
 
 ## Installation
 
