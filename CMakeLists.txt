@@ -18,6 +18,7 @@ target_sources(picoports PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_adc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_ctrl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_gpio.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_i2c.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_descriptors.c
 )
 
@@ -30,6 +31,12 @@ target_link_libraries(picoports PUBLIC hardware_adc)
 option(USE_ADC_GPIOS "Enable the ADC for GP26/GP27/GP28")
 if(USE_ADC_GPIOS)
 target_compile_definitions(picoports PUBLIC USE_ADC_GPIOS=1)
+endif()
+
+option(USE_I2C_GPIOS "Enable I2C on GP16/GP17")
+if(USE_I2C_GPIOS)
+target_link_libraries(picoports PUBLIC hardware_i2c)
+target_compile_definitions(picoports PUBLIC USE_I2C_GPIOS=1)
 endif()
 
 family_configure_device_example(picoports noos)

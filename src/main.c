@@ -7,6 +7,7 @@
 #include "pp_adc.h"
 #include "pp_ctrl.h"
 #include "pp_gpio.h"
+#include "pp_i2c.h"
 
 static void send_delayed_messages(void);
 
@@ -24,6 +25,7 @@ int main(void)
 
 	pp_gpio_init();
 	pp_adc_init();
+	pp_i2c_init();
 
 	while (1) {
 		tud_task();
@@ -157,6 +159,11 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 	case DLN2_HANDLE_GPIO:
 		ok = pp_gpio_handle_request(id, data_in, data_in_len, data_out,
 					    &data_out_len);
+		break;
+
+	case DLN2_HANDLE_I2C:
+		ok = pp_i2c_handle_request(id, data_in, data_in_len, data_out,
+					   &data_out_len);
 		break;
 
 	default:
