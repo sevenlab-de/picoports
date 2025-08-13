@@ -16,6 +16,12 @@
 #define PP_I2C_PIN_SDA 16
 #define PP_I2C_PIN_SCL 17
 
+// DLN2_I2C_BUF_SIZE is the maximum message size that is received and sent for
+// the i2c module. The protocol demands that we receive and send this in one
+// transmission.
+TU_VERIFY_STATIC(DLN2_I2C_BUF_SIZE <= CFG_TUD_VENDOR_TX_BUFSIZE);
+TU_VERIFY_STATIC(DLN2_I2C_BUF_SIZE <= CFG_TUD_VENDOR_RX_BUFSIZE);
+
 TU_ATTR_UNUSED static const char *i2c_cmd2str(uint16_t cmd)
 {
 	// clang-format off

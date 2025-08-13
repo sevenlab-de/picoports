@@ -73,16 +73,20 @@ static void send_delayed_messages(void)
 	if (r_id == w_id)
 		return;
 
-	if (tud_vendor_write_available() != CFG_TUD_VENDOR_TX_BUFSIZE)
+	uint32_t bytes_avail = tud_vendor_write_available();
+	if (bytes_avail != CFG_TUD_VENDOR_TX_BUFSIZE)
 		return;
 
 	uint8_t *message = &message_buffer[r_id];
 	uint16_t size = u16_from_buf_le(&message[0]);
 
-	tud_vendor_write(message, size);
-	tud_vendor_write_flush();
+	uint32_t bytes_written = tud_vendor_write(message, size);
+	uint32_t bytes_flushed = tud_vendor_write_flush();
 
-	TU_LOG3("main: sent message = ");
+	TU_LOG3("main: sent message (%" PRIu32 "-%" PRIu32 "-%" PRIu32 ") = ",
+		bytes_avail, bytes_written, bytes_flushed);
+	(void)bytes_written;
+	(void)bytes_flushed;
 	TU_LOG3_BUF(message, size);
 
 	r_id += CFG_TUD_VENDOR_TX_BUFSIZE;
@@ -116,6 +120,9 @@ void send_message_delayed(uint16_t cmd, uint16_t echo, enum dln2_handle handle,
 	u16_to_buf_le(&buf[4], echo);
 	u16_to_buf_le(&buf[6], handle);
 	memcpy(&buf[MSG_HDR_SZ], data, data_len);
+
+	TU_LOG3("main: Request to send %u byte from %s\r\n", data_len,
+		handle2str(handle));
 
 	w_id += CFG_TUD_VENDOR_TX_BUFSIZE;
 	if (w_id >= sizeof(message_buffer))
