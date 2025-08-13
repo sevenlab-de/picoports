@@ -57,6 +57,7 @@ bool pp_adc_handle_request(uint16_t cmd, uint8_t const *data_in,
 		TU_VERIFY(data_in_len == 2);
 		TU_VERIFY(data_in[0] == 0 && data_in[1] == DLN2_ADC_DATA_BITS);
 		LOG_DBG("ADC: Setting resolution\r\n");
+		*data_out_len = 0;
 		break;
 	case DLN2_ADC_CHANNEL_ENABLE: {
 		TU_VERIFY(data_in_len == 2);
@@ -64,6 +65,7 @@ bool pp_adc_handle_request(uint16_t cmd, uint8_t const *data_in,
 		uint8_t chan = data_in[1] + ADC_OFFS;
 		LOG_DBG("ADC: Enabling channel %u\r\n", chan);
 		(void)chan;
+		*data_out_len = 0;
 		break;
 	}
 	case DLN2_ADC_CHANNEL_DISABLE: {
@@ -72,6 +74,7 @@ bool pp_adc_handle_request(uint16_t cmd, uint8_t const *data_in,
 		uint8_t chan = data_in[1] + ADC_OFFS;
 		LOG_DBG("ADC: Disabling channel %u\r\n", chan);
 		(void)chan;
+		*data_out_len = 0;
 		break;
 	}
 	case DLN2_ADC_ENABLE: {
