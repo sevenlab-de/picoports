@@ -42,7 +42,7 @@ jobs:
       run: |
         cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}}
         make -C build -j $(nproc)
-        mv build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2
+        mv -n build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2 || true
 
     - name: Store Build Artifact
       uses: actions/upload-artifact@v4
