@@ -82,6 +82,33 @@
 // clang-format on
 
 // clang-format off
+// --- Defines from Linux drivers/i2c/busses/i2c-dln2.c ---
+
+#define DLN2_I2C_MODULE_ID		0x03
+#define DLN2_I2C_CMD(cmd)		DLN2_CMD(cmd, DLN2_I2C_MODULE_ID)
+
+/* I2C commands */
+#define DLN2_I2C_GET_PORT_COUNT		DLN2_I2C_CMD(0x00)
+#define DLN2_I2C_ENABLE			DLN2_I2C_CMD(0x01)
+#define DLN2_I2C_DISABLE		DLN2_I2C_CMD(0x02)
+#define DLN2_I2C_IS_ENABLED		DLN2_I2C_CMD(0x03)
+#define DLN2_I2C_WRITE			DLN2_I2C_CMD(0x06)
+#define DLN2_I2C_READ			DLN2_I2C_CMD(0x07)
+#define DLN2_I2C_SCAN_DEVICES		DLN2_I2C_CMD(0x08)
+#define DLN2_I2C_PULLUP_ENABLE		DLN2_I2C_CMD(0x09)
+#define DLN2_I2C_PULLUP_DISABLE		DLN2_I2C_CMD(0x0A)
+#define DLN2_I2C_PULLUP_IS_ENABLED	DLN2_I2C_CMD(0x0B)
+#define DLN2_I2C_TRANSFER		DLN2_I2C_CMD(0x0C)
+#define DLN2_I2C_SET_MAX_REPLY_COUNT	DLN2_I2C_CMD(0x0D)
+#define DLN2_I2C_GET_MAX_REPLY_COUNT	DLN2_I2C_CMD(0x0E)
+
+#define DLN2_I2C_MAX_XFER_SIZE		256
+#define DLN2_I2C_BUF_SIZE		(DLN2_I2C_MAX_XFER_SIZE + 16)
+
+// --- End of defines from Linux drivers/i2c/busses/i2c-dln2.c ---
+// clang-format on
+
+// clang-format off
 // --- Defines from Linux drivers/mfd/dln2.c ---
 
 // SPDX-License-Identifier: GPL-2.0-only
@@ -101,6 +128,7 @@
 #define CMD_GET_DEVICE_SN		DLN2_GENERIC_CMD(0x31)
 
 #define DLN2_HW_ID			0x200
+#define DLN2_RX_BUF_SIZE		512
 
 enum dln2_handle {
 	DLN2_HANDLE_EVENT = 0,		/* don't change, hardware defined */

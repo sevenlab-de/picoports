@@ -6,10 +6,8 @@
 #include "byte_ops.h"
 #include "dln2.h"
 
-#define LOG_DBG TU_LOG1
-
 static const uint8_t adc_gpios[] = {
-#ifdef USE_ADC_GPIOS
+#ifndef PP_GPIO_ONLY
 	26, 27, 28,
 #endif
 	29 // 1/3 voltage divider on VSYS
@@ -43,54 +41,59 @@ bool pp_adc_handle_request(uint16_t cmd, uint8_t const *data_in,
 			   uint16_t data_in_len, uint8_t *data_out,
 			   uint16_t *data_out_len)
 {
-	TU_ASSERT(*data_out_len >= 1);
-
 	switch (cmd) {
 	case DLN2_ADC_GET_CHANNEL_COUNT:
+		TU_ASSERT(*data_out_len >= 1);
 		TU_VERIFY(data_in_len == 1);
 		TU_VERIFY(data_in[0] == 0);
-		LOG_DBG("ADC: Getting number of channels\r\n");
+		TU_LOG3("ADC: Getting number of channels\r\n");
 		data_out[0] = NUM_PP_ADC_CHANNELS;
 		*data_out_len = 1;
 		break;
 	case DLN2_ADC_SET_RESOLUTION:
 		TU_VERIFY(data_in_len == 2);
 		TU_VERIFY(data_in[0] == 0 && data_in[1] == DLN2_ADC_DATA_BITS);
-		LOG_DBG("ADC: Setting resolution\r\n");
+		TU_LOG3("ADC: Setting resolution\r\n");
+		*data_out_len = 0;
 		break;
 	case DLN2_ADC_CHANNEL_ENABLE: {
 		TU_VERIFY(data_in_len == 2);
 		TU_VERIFY(data_in[0] == 0);
 		uint8_t chan = data_in[1] + ADC_OFFS;
-		LOG_DBG("ADC: Enabling channel %u\r\n", chan);
+		TU_LOG3("ADC: Enabling channel %u\r\n", chan);
 		(void)chan;
+		*data_out_len = 0;
 		break;
 	}
 	case DLN2_ADC_CHANNEL_DISABLE: {
 		TU_VERIFY(data_in_len == 2);
 		TU_VERIFY(data_in[0] == 0);
 		uint8_t chan = data_in[1] + ADC_OFFS;
-		LOG_DBG("ADC: Disabling channel %u\r\n", chan);
+		TU_LOG3("ADC: Disabling channel %u\r\n", chan);
 		(void)chan;
+		*data_out_len = 0;
 		break;
 	}
 	case DLN2_ADC_ENABLE: {
+		TU_ASSERT(*data_out_len >= 2);
 		TU_VERIFY(data_in_len == 1);
 		TU_VERIFY(data_in[0] == 0);
-		LOG_DBG("ADC: Enabling\r\n");
+		TU_LOG3("ADC: Enabling\r\n");
 		u16_to_buf_le(&data_out[0], 0); // no conflict
 		*data_out_len = 2;
 		break;
 	}
 	case DLN2_ADC_DISABLE: {
+		TU_ASSERT(*data_out_len >= 2);
 		TU_VERIFY(data_in_len == 1);
 		TU_VERIFY(data_in[0] == 0);
-		LOG_DBG("ADC: Disabling\r\n");
+		TU_LOG3("ADC: Disabling\r\n");
 		u16_to_buf_le(&data_out[0], 0); // no conflict
 		*data_out_len = 2;
 		break;
 	}
 	case DLN2_ADC_CHANNEL_GET_VAL: {
+		TU_ASSERT(*data_out_len >= 2);
 		TU_VERIFY(data_in_len == 2);
 		TU_VERIFY(data_in[0] == 0);
 		uint8_t chan = data_in[1] + ADC_OFFS;
@@ -98,7 +101,7 @@ bool pp_adc_handle_request(uint16_t cmd, uint8_t const *data_in,
 		uint16_t val = adc_read();
 		// Pico has 12-bit ADC, kernel driver expects 10-bit ADC
 		val = val >> 2;
-		LOG_DBG("ADC: Getting channel %u value: %u\r\n", chan, val);
+		TU_LOG3("ADC: Getting channel %u value: %u\r\n", chan, val);
 		u16_to_buf_le(&data_out[0], val);
 		*data_out_len = 2;
 		break;

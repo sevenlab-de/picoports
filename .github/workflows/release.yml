@@ -10,10 +10,10 @@ jobs:
   build:
     strategy:
       matrix:
-        USE_ADC_GPIOS: [false, true]
+        GPIO_ONLY: [false, true]
     uses: ./.github/workflows/build.yml
     with:
-      USE_ADC_GPIOS: ${{ matrix.USE_ADC_GPIOS }}
+      GPIO_ONLY: ${{ matrix.GPIO_ONLY }}
 
   release:
     runs-on: ubuntu-latest
@@ -34,5 +34,10 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: softprops/action-gh-release@v2
         with:
+          body: |
+            There are two variants:
+
+            - `picoports.uf2` features all interfaces as described in the Readme
+            - `picoports_GPIO-only.uf2` feature only GPIOs
           files:
             artifacts/**

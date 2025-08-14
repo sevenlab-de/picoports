@@ -3,12 +3,12 @@ name: Build
 on:
   workflow_call:
     inputs:
-      USE_ADC_GPIOS:
+      GPIO_ONLY:
         type: boolean
         description: Enable the ADC for GP26/GP27/GP28
   workflow_dispatch:
     inputs:
-      USE_ADC_GPIOS:
+      GPIO_ONLY:
         type: boolean
         description: Enable the ADC for GP26/GP27/GP28
 
@@ -32,17 +32,17 @@ jobs:
     - name: Construct firmware name
       id: fw_name
       run: |
-        if [ ${{inputs.USE_ADC_GPIOS}} == true ]; then
-          echo "FW_NAME=picoports_GPIO+ADC" >> "$GITHUB_OUTPUT"
+        if [ ${{inputs.GPIO_ONLY}} == true ]; then
+          echo "FW_NAME=picoports_GPIO-only" >> "$GITHUB_OUTPUT"
         else
-          echo "FW_NAME=picoports_GPIO" >> "$GITHUB_OUTPUT"
+          echo "FW_NAME=picoports" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Build
       run: |
-        cmake -B build -DUSE_ADC_GPIOS=${{inputs.USE_ADC_GPIOS}}
+        cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}}
         make -C build -j $(nproc)
-        mv build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2
+        mv -n build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2 || true
 
     - name: Store Build Artifact
       uses: actions/upload-artifact@v4
