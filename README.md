@@ -1,10 +1,16 @@
 # PicoPorts
 
-A GPIO/ADC/I2C-Expander/Breakout via USB based on Raspberry Pi Pico 1.
+A USB-to-GPIO/ADC/I2C/UART interface based on the Raspberry Pi Pico 1.
 
 ## Usage
 
 ### GPIO
+
+For GPIO access from the command line you can use the tools provided by the package `gpiod`
+
+```bash
+sudo apt install gpiod
+```
 
 Example: Read GP2
 
@@ -30,7 +36,7 @@ The gpiochip line numbers depend on the firmware variant:
 
 | Pico pin GP_              | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* |
 |---------------------------|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
-| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |    - |    - |   14 |   15 |   16 |   17 |   18 |    - |    - |    - |    19 |
+| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |    - |    - |   14 |   15 |    - |    - |   16 |    - |    - |    - |    17 |
 | gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |    24 |
 
 $*$ GP25 is connected to the LED on the Pico
@@ -112,6 +118,23 @@ I2C is only available in the full firmware variant (not in the `GPIO-only` varia
 | Pico Pin | GP16 | GP17 |
 |----------|------|------|
 | I2C line |  SDA |  SCL |
+
+### UART
+
+Example: Open a serial terminal to interact with the UART (using tty device `/dev/ttyACM0` and `tio`
+tool)
+
+```bash
+tio /dev/ttyACM0
+```
+
+Note: UART uses 115200 baud (8n1).
+
+UART is only available in the full firmware variant (not in the `GPIO-only` variant).
+
+| Pico Pin  | GP20 | GP21 |
+|-----------|------|------|
+| UART line |   TX |   RX |
 
 ## Installation
 

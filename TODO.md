@@ -27,7 +27,5 @@
   - buffers so we can use iio-tools
 - SPI
   - TODO
-- UART
-  - Should be fairly easy to add a UART using CDC ACM
 - Remove debug UART to free up the pins, or maybe only enable UART logging with `-DDEBUG`?
 - Add support for Pico 2

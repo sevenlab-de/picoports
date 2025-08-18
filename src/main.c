@@ -8,6 +8,7 @@
 #include "pp_ctrl.h"
 #include "pp_gpio.h"
 #include "pp_i2c.h"
+#include "pp_uart.h"
 
 static void send_delayed_messages(void);
 
@@ -26,10 +27,12 @@ int main(void)
 	pp_gpio_init();
 	pp_adc_init();
 	pp_i2c_init();
+	pp_uart_init();
 
 	while (1) {
 		tud_task();
-		gpio_process_events();
+		pp_gpio_task();
+		pp_uart_task();
 		send_delayed_messages();
 	}
 }

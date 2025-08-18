@@ -19,6 +19,7 @@ target_sources(picoports PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_ctrl.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_gpio.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_i2c.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/pp_uart.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/usb_descriptors.c
 )
 
