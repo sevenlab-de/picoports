@@ -98,6 +98,15 @@ Example: Read data from the device at I2C address `0x48` (using I2C device `i2c-
 i2cget 1 0x48
 ```
 
+Example: Attach kernel driver `pcf8591` to a Philips PCF8591 ADC/DAC at I2C address `0x48` (using
+I2C device `i2c-1`)
+
+```bash
+echo pcf8591 0x48 | sudo tee /sys/class/i2c-adapter/i2c-1/new_device
+# Example: Read value from first ADC channel
+cat /sys/class/i2c-adapter/i2c-1/1-0048/in0_input
+```
+
 I2C is only available in the full firmware variant (not in the `GPIO-only` variant).
 
 | Pico Pin | GP16 | GP17 |
