@@ -208,7 +208,7 @@ static bool take_pin_event(uint16_t *pin)
 	return false;
 }
 
-void gpio_process_events(void)
+void pp_gpio_task(void)
 {
 	uint16_t pin;
 

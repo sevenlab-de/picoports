@@ -31,9 +31,9 @@ int main(void)
 
 	while (1) {
 		tud_task();
-		gpio_process_events();
-		send_delayed_messages();
+		pp_gpio_task();
 		pp_uart_task();
+		send_delayed_messages();
 	}
 }
 
