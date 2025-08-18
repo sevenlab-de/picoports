@@ -126,8 +126,8 @@ I2C is only available in the full firmware variant (not in the `GPIO-only` varia
 ### Setup
 
 ```shell
-git clone --no-recurse-submodules https://github.com/gschwaer/minimal-pico-tinyusb-pio-project.git
-cd minimal-pico-tinyusb-pio-project
+git clone --no-recurse-submodules https://github.com/gschwaer/picoports.git
+cd picoports
 git submodule update --init -- pico-sdk
 git -C pico-sdk submodule update --init -- lib/tinyusb
 ```
