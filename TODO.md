@@ -1,30 +1,33 @@
 # TODO
 
-- use clang-format
-- `DLN2_GPIO_PIN_GET_OUT_VAL`: How to test? Not supported by gpiod tools.
-- `DLN2_GPIO_SET_DEBOUNCE`: How to test? Not supported by gpiod tools.
-- events handle + gpio irqchip functionality
-  - One issue remaining:
-    - We're dropping edge triggers on the device:
+- GPIO
+  - `DLN2_GPIO_PIN_GET_OUT_VAL`: How to test? Not supported by gpiod tools.
+  - `DLN2_GPIO_SET_DEBOUNCE`: How to test? Not supported by gpiod tools.
+  - Bug: We're dropping edge triggers on the device:
 
-      ```text
-      event: FALLING EDGE offset: 0 timestamp: [    4431.037246200]
-      event: FALLING EDGE offset: 1 timestamp: [    4431.044283548]
-      event:  RISING EDGE offset: 0 timestamp: [    4431.113954651]
-      event:  RISING EDGE offset: 1 timestamp: [    4431.127775481]
-      event: FALLING EDGE offset: 0 timestamp: [    4431.173084510]
-      event:  RISING EDGE offset: 1 timestamp: [    4431.180145557]
-      event:  RISING EDGE offset: 0 timestamp: [    4431.206194587]
-      event:  RISING EDGE offset: 1 timestamp: [    4431.213144309]
-      event: FALLING EDGE offset: 0 timestamp: [    4431.554252640]
-      event: FALLING EDGE offset: 1 timestamp: [    4431.567994787]
-      ```
+    ```text
+    event: FALLING EDGE offset: 0 timestamp: [    4431.037246200]
+    event: FALLING EDGE offset: 1 timestamp: [    4431.044283548]
+    event:  RISING EDGE offset: 0 timestamp: [    4431.113954651]
+    event:  RISING EDGE offset: 1 timestamp: [    4431.127775481]
+    event: FALLING EDGE offset: 0 timestamp: [    4431.173084510]
+    event:  RISING EDGE offset: 1 timestamp: [    4431.180145557]
+    event:  RISING EDGE offset: 0 timestamp: [    4431.206194587]
+    event:  RISING EDGE offset: 1 timestamp: [    4431.213144309]
+    event: FALLING EDGE offset: 0 timestamp: [    4431.554252640]
+    event: FALLING EDGE offset: 1 timestamp: [    4431.567994787]
+    ```
 
   - Level triggered interrupts
     - `DLN2_GPIO_EVENT_LVL_HIGH`
     - `DLN2_GPIO_EVENT_LVL_LOW`
     - How to test? Not supported by gpiod tools.
     - I assume we can handle them the same way as edge triggered irqs, so we'll just send a trigger when the value changes to the target value. The only difference being that if the irq event enable is requested and the target value is already present, we should also send a trigger immediately.
-- adc
-- i2c
-- spi
+- ADC
+  - buffers so we can use iio-tools
+- SPI
+  - TODO
+- UART
+  - Should be fairly easy to add a UART using CDC ACM
+- Remove debug UART to free up the pins, or maybe only enable UART logging with `-DDEBUG`?
+- Add support for Pico 2
