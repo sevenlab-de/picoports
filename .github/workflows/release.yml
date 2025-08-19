@@ -38,6 +38,6 @@ jobs:
             There are two variants:
 
             - `picoports.uf2` features all interfaces as described in the Readme
-            - `picoports_GPIO-only.uf2` feature only GPIOs
+            - `picoports_GPIO-only.uf2` features only GPIOs
           files:
             artifacts/**
