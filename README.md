@@ -4,6 +4,15 @@ A USB-to-GPIO/ADC/I2C/UART interface based on the Raspberry Pi Pico 1.
 
 ## Usage
 
+### Pinout
+
+Pinout for the PicoPorts firmware variant with all interfaces:
+
+![Pinout](./docs/Pinout.png)
+
+Original image from [official Raspberry Pi documents](https://datasheets.raspberrypi.com/pico/Pico-R3-A4-Pinout.pdf).
+Includes data from <https://pico.pinout.xyz>. Modified to include the Linux GPIO line numbers.
+
 ### GPIO
 
 For GPIO access from the command line you can use the tools provided by the package `gpiod`
