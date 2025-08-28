@@ -30,7 +30,8 @@ void pp_uart_task(void)
 	if (i > 0) {
 		uint32_t written = tud_cdc_write(buf, i);
 		tud_cdc_write_flush();
-		TU_LOG1("Wrote %" PRIu32 " bytes!\r\n", written);
+		TU_LOG3("Forwarded %" PRIu32 " bytes!\r\n", written);
+		(void)written;
 	}
 #endif
 }
