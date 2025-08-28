@@ -27,5 +27,7 @@
   - buffers so we can use iio-tools
 - SPI
   - TODO
-- Remove debug UART to free up the pins, or maybe only enable UART logging with `-DDEBUG`?
+- UART
+  - support line coding change, see `tud_cdc_line_coding_cb()`
 - Add support for Pico 2
+- Enable readout of the button state via a GPIO
