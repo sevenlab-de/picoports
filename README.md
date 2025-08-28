@@ -2,6 +2,12 @@
 
 A USB-to-GPIO/ADC/I2C/UART interface based on the Raspberry Pi Pico 1.
 
+The goal of this project is to be as easy as possible to setup and use. This is achieved by
+
+- drag and drop firmware [installation](#installation)
+- no driver installation on the host
+- works with standard Linux tooling
+
 ## Usage
 
 ### Pinout
@@ -21,13 +27,13 @@ For GPIO access from the command line you can use the tools provided by the pack
 sudo apt install gpiod
 ```
 
-Example: Read GP2
+Example: Read GP0
 
 ```bash
 gpioget gpiochip0 0
 ```
 
-Example: Set GP10 high for 1 second (gpio states persist after gpioset command exits)
+Example: Set GP8 high for 1 second (gpio states persist after gpioset command exits)
 
 ```bash
 gpioset gpiochip0 8=1
@@ -38,17 +44,18 @@ gpioset gpiochip0 8=0
 Special case: Switch on Pico LED (connected to GP25)
 
 ```bash
-gpioset gpiochip0 24=1
+gpioset gpiochip0 19=1
 ```
 
-The gpiochip line numbers depend on the firmware variant:
+There are two firmware variants. On with GPIOs and interfaces and one with GPIOs only. The gpiochip
+line numbers depend on the firmware variant:
 
-| Pico pin GP_              | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* |
-|---------------------------|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
-| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |    - |    - |   14 |   15 |    - |    - |   16 |    - |    - |    - |    17 |
-| gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |    8 |    9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |    24 |
+| Pico pin GP_              | GP0 | GP1 | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* |
+|---------------------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
+| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |    - |    - |   16 |   17 |    - |    - |   18 |    - |    - |    - |    19 |
+| gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |   24 |   25 |    26 |
 
-$*$ GP25 is connected to the LED on the Pico
+*GP25 is connected to the LED
 
 ### ADC
 
@@ -85,12 +92,13 @@ For I2C access from the command line you can use the tools provided by the packa
 sudo apt install i2c-tools
 ```
 
-Example: Find your I2C device number
+Example: Find your I2C device number (look for "dln2-i2c" in the third column)
 
 ```bash
 i2cdetect -l
 # Example output:
-# i2c-1   i2c   dln2-i2c-3-1.1:1.0-0   I2C adapter
+# i2c-0   smbus   SMBus I801 adapter at efa0   SMBus adapter
+# i2c-1   i2c     dln2-i2c-3-1.1:1.0-0         I2C adapter
 ```
 
 Example: Scan for device on I2C bus using read operation* (using I2C device `i2c-1`)
@@ -99,7 +107,7 @@ Example: Scan for device on I2C bus using read operation* (using I2C device `i2c
 i2cdetect -r 1
 ```
 
-$*$ I2C quick write is not supported, so detection has to use the read command (`-r` argument).
+*I2C quick write is not supported, so detection has to use the read command (`-r` option).
 
 Example: Write `0x40 0xff` to the device at I2C address `0x48` (using I2C device `i2c-1`)
 
@@ -113,7 +121,7 @@ Example: Read data from the device at I2C address `0x48` (using I2C device `i2c-
 i2cget 1 0x48
 ```
 
-Example: Attach kernel driver `pcf8591` to a Philips PCF8591 ADC/DAC at I2C address `0x48` (using
+Example: Attach kernel driver `pcf8591` for a Philips PCF8591 ADC/DAC at I2C address `0x48` (using
 I2C device `i2c-1`)
 
 ```bash
@@ -137,7 +145,7 @@ tool)
 tio /dev/ttyACM0
 ```
 
-Note: UART uses 115200 baud (8n1).
+Note: Currently UART uses 115200 baud (8n1) only (TODO).
 
 UART is only available in the full firmware variant (not in the `GPIO-only` variant).
 

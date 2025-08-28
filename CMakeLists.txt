@@ -37,3 +37,12 @@ target_link_libraries(picoports PUBLIC hardware_i2c)
 endif()
 
 family_configure_device_example(picoports noos)
+
+option(LOG_ON_GP01 "Enable debug logging on GP0/GP1 (TX/RX resp.)")
+# This is enabled by default.
+if(LOG_ON_GP01)
+target_compile_definitions(picoports PUBLIC PP_LOG_ON_GP01=1)
+else()
+# Must be after call to family_configure_device_example().
+pico_enable_stdio_uart(picoports 0)
+endif()
