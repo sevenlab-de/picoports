@@ -26,8 +26,9 @@ jobs:
         with:
           path: artifacts
 
-      - name: List artifacts
+      - name: Append version suffix
         run: |
+          rename -v 's/.uf2$/_${{github.ref_name}}.uf2/' artifacts/*
           ls -l artifacts/
 
       - name: Create Release
@@ -37,7 +38,7 @@ jobs:
           body: |
             There are two variants:
 
-            - `picoports.uf2` features all interfaces as described in the Readme
-            - `picoports_GPIO-only.uf2` features only GPIOs
+            - `picoports_${{github.ref_name}}.uf2` all features as described in the Readme
+            - `picoports_GPIO-only_${{github.ref_name}}.uf2` features only GPIOs
           files:
             artifacts/**
