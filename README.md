@@ -155,7 +155,7 @@ UART is only available in the full firmware variant (not in the `GPIO-only` vari
 
 ## Installation
 
-1. [Download the firmware](https://github.com/gschwaer/picoports/releases/latest).
+1. [Download the firmware](https://github.com/sevenlab-de/picoports/releases/latest).
 2. Use [Drag-and-drop installation](https://www.raspberrypi.com/documentation/microcontrollers/micropython.html#drag-and-drop-micropython).
    1. Press and hold the `BOOTSEL` button on your Pico.
    2. Plug the Pico into your PC, the Pico will open as thumb drive.
@@ -166,7 +166,7 @@ UART is only available in the full firmware variant (not in the `GPIO-only` vari
 ### Setup
 
 ```shell
-git clone --no-recurse-submodules https://github.com/gschwaer/picoports.git
+git clone --no-recurse-submodules https://github.com/sevenlab-de/picoports.git
 cd picoports
 git submodule update --init -- pico-sdk
 git -C pico-sdk submodule update --init -- lib/tinyusb
