@@ -15,6 +15,7 @@ jobs:
     with:
       GPIO_ONLY: ${{ matrix.GPIO_ONLY }}
       LOG_ON_GP01: false
+      BOOTSEL_BUTTON: false
 
   release:
     runs-on: ubuntu-latest
@@ -31,12 +32,11 @@ jobs:
         run: |
           ls -l artifacts/
           mv \
-            artifacts/picoports__GPIO_ONLY=false__LOG_ON_GP01=false.uf2 \
+            artifacts/picoports__GPIO_ONLY=false*.uf2 \
             artifacts/picoports.uf2
           mv \
-            artifacts/picoports__GPIO_ONLY=true__LOG_ON_GP01=false.uf2 \
+            artifacts/picoports__GPIO_ONLY=true*.uf2 \
             artifacts/picoports_GPIO-only.uf2
-          rm artifacts/picoports__*
           rename -v 's/^picoports/picoports_${{github.ref_name}}/' artifacts/*
           ls -l artifacts/
 
