@@ -8,6 +8,8 @@ jobs:
     strategy:
       matrix:
         GPIO_ONLY: [false, true]
+        LOG_ON_GP01: [false, true]
     uses: ./.github/workflows/build.yml
     with:
       GPIO_ONLY: ${{ matrix.GPIO_ONLY }}
+      LOG_ON_GP01: ${{ matrix.LOG_ON_GP01 }}

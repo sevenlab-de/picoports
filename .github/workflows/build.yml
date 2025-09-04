@@ -5,12 +5,17 @@ on:
     inputs:
       GPIO_ONLY:
         type: boolean
-        description: Enable the ADC for GP26/GP27/GP28
+      LOG_ON_GP01:
+        type: boolean
   workflow_dispatch:
     inputs:
       GPIO_ONLY:
         type: boolean
-        description: Enable the ADC for GP26/GP27/GP28
+      LOG_ON_GP01:
+        type: boolean
+
+env:
+  FW_NAME: picoports__GPIO_ONLY=${{inputs.GPIO_ONLY}}__LOG_ON_GP01=${{inputs.LOG_ON_GP01}}
 
 jobs:
   build:
@@ -29,23 +34,14 @@ jobs:
         git submodule update --init -- pico-sdk
         git -C pico-sdk submodule update --init -- lib/tinyusb
 
-    - name: Construct firmware name
-      id: fw_name
-      run: |
-        if [ ${{inputs.GPIO_ONLY}} == true ]; then
-          echo "FW_NAME=picoports_GPIO-only" >> "$GITHUB_OUTPUT"
-        else
-          echo "FW_NAME=picoports" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Build
       run: |
-        cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}}
+        cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}} -DLOG_ON_GP01=${{inputs.LOG_ON_GP01}}
         make -C build -j $(nproc)
-        mv -n build/picoports.uf2 build/${{ steps.fw_name.outputs.FW_NAME }}.uf2 || true
+        mv -n build/picoports.uf2 build/${{ env.FW_NAME }}.uf2 || true
 
     - name: Store Build Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.fw_name.outputs.FW_NAME }}
+        name: ${{ env.FW_NAME }}
         path: build/picoports*.uf2
