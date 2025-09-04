@@ -7,15 +7,19 @@ on:
         type: boolean
       LOG_ON_GP01:
         type: boolean
+      BOOTSEL_BUTTON:
+        type: boolean
   workflow_dispatch:
     inputs:
       GPIO_ONLY:
         type: boolean
       LOG_ON_GP01:
         type: boolean
+      BOOTSEL_BUTTON:
+        type: boolean
 
 env:
-  FW_NAME: picoports__GPIO_ONLY=${{inputs.GPIO_ONLY}}__LOG_ON_GP01=${{inputs.LOG_ON_GP01}}
+  FW_NAME: picoports__GPIO_ONLY=${{inputs.GPIO_ONLY}}__LOG_ON_GP01=${{inputs.LOG_ON_GP01}}__BOOTSEL_BUTTON=${{inputs.BOOTSEL_BUTTON}}
 
 jobs:
   build:
@@ -36,7 +40,7 @@ jobs:
 
     - name: Build
       run: |
-        cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}} -DLOG_ON_GP01=${{inputs.LOG_ON_GP01}}
+        cmake -B build -DGPIO_ONLY=${{inputs.GPIO_ONLY}} -DLOG_ON_GP01=${{inputs.LOG_ON_GP01}} -DBOOTSEL_BUTTON=${{inputs.BOOTSEL_BUTTON}}
         make -C build -j $(nproc)
         mv -n build/picoports.uf2 build/${{ env.FW_NAME }}.uf2 || true
 
