@@ -223,9 +223,15 @@ git -C pico-sdk submodule update --init -- lib/tinyusb
 ### Build
 
 ```shell
-cmake -B build
+cmake -B build [-DGPIO_ONLY=yes] [-DLOG_ON_GP01=yes] [-DBOOTSEL_BUTTON=yes]
 make -C build
+# quick install:
+cp build/picoports.uf2 /media/$USER/RPI-RP2/
 ```
+
+- `GPIO_ONLY`: Disable interfaces, use all pins as GPIOs
+- `LOG_ON_GP01`: Enable debug logging on GP0/GP1 (TX/RX resp.)
+- `BOOTSEL_BUTTON`: Pressing the button resets the pico into BOOTSEL mode
 
 ### Theory of operation
 
