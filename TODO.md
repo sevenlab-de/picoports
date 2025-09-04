@@ -27,7 +27,5 @@
   - buffers so we can use iio-tools
 - SPI
   - TODO
-- UART
-  - support line coding change, see `tud_cdc_line_coding_cb()`
 - Add support for Pico 2
 - Enable readout of the button state via a GPIO
