@@ -27,24 +27,35 @@ For GPIO access from the command line you can use the tools provided by the pack
 sudo apt install gpiod
 ```
 
-Example: Read GP0
+Example: Find your gpio device number (look for "dln2" in the second column; here the gpio device is
+`gpiochip1`)
 
 ```bash
-gpioget gpiochip0 0
+gpiodetect
+# Example output:
+# gpiochip0 [INT34C6:00] (463 lines)
+# gpiochip1 [dln2] (20 lines)
 ```
 
-Example: Set GP8 high for 1 second (gpio states persist after gpioset command exits)
+Example: Read GP0 (using gpio device `gpiochip1`)
 
 ```bash
-gpioset gpiochip0 8=1
+gpioget gpiochip1 0
+```
+
+Example: Set GP8 high for 1 second (gpio states persist after gpioset command exits; using gpio
+device `gpiochip1`)
+
+```bash
+gpioset gpiochip1 8=1
 sleep 1
-gpioset gpiochip0 8=0
+gpioset gpiochip1 8=0
 ```
 
-Special case: Switch on Pico LED (connected to GP25)
+Special case: Switch on Pico LED (connected to GP25; using gpio device `gpiochip1`)
 
 ```bash
-gpioset gpiochip0 19=1
+gpioset gpiochip1 19=1
 ```
 
 There are two firmware variants. On with GPIOs and interfaces and one with GPIOs only. The gpiochip
@@ -56,6 +67,32 @@ line numbers depend on the firmware variant:
 | gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |   24 |   25 |    26 |
 
 *GP25 is connected to the LED
+
+#### Using multiple devices
+
+When using multiple PicoPorts devices, it's not easy to determine the exact gpio device using
+`gpiodetect`. We can use a `udev` rule to assign unique path's to the devices based on their device
+ID and their path. This is done by the file `60-gpiochip.rules`. You can install it with:
+
+```bash
+sudo cp 60-gpiochip.rules /etc/udev/rules.d/
+sudo udevadm control --reload
+```
+
+Then unplug and plug in the USB connection.
+
+After installation, `udev` will create symlinks of the form:
+
+- `/dev/gpio/by-id/usb-PicoPorts_GPIO_Expander_{{DEVICE_ID}}-if00`
+- `/dev/gpio/by-path/{{BUS_PATH}}-platform-dln2-gpio.*.auto`
+
+The `gpiod` tools accept device paths instead of `gpiochip*` identifiers.
+
+Example: Read GP0 (using gpio device `/dev/gpio/by-id/usb-PicoPorts_GPIO_Expander_E660012345678901-if00`)
+
+```bash
+gpioget /dev/gpio/by-id/usb-PicoPorts_GPIO_Expander_E660012345678901-if00 0
+```
 
 ### ADC
 
@@ -92,7 +129,8 @@ For I2C access from the command line you can use the tools provided by the packa
 sudo apt install i2c-tools
 ```
 
-Example: Find your I2C device number (look for "dln2-i2c" in the third column)
+Example: Find your I2C device (look for "dln2-i2c" in the third column; here the I2C device is
+`i2c-1`)
 
 ```bash
 i2cdetect -l
@@ -137,6 +175,10 @@ I2C is only available in the full firmware variant (not in the `GPIO-only` varia
 | I2C line |  SDA |  SCL |
 
 ### UART
+
+Note: Many systems provide a symlink of the form
+`/dev/serial/by-id/usb-PicoPorts_GPIO_Expander_{{DEVICE_ID}}-if01` which can be used instead of
+`/dev/ttyACM*`.
 
 Example: Open a serial terminal to interact with the UART (using tty device `/dev/ttyACM0` and `tio`
 tool)
