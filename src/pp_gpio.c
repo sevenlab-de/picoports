@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2025 sevenlab engineering GmbH
+ */
 #include "tusb.h"
 
 #include "hardware/gpio.h"
