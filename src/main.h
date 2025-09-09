@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2025 sevenlab engineering GmbH
+ */
 #ifndef _PP_MAIN_H_
 #define _PP_MAIN_H_
 
