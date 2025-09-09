@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Copyright (c) 2025 sevenlab engineering GmbH
+ */
 #ifndef _PICOPORTS_TUSB_CONFIG_H_
 #define _PICOPORTS_TUSB_CONFIG_H_
 
