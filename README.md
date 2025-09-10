@@ -58,15 +58,31 @@ Special case: Switch on Pico LED (connected to GP25; using gpio device `gpiochip
 gpioset gpiochip1 19=1
 ```
 
+Special case: Read button state (can only be read)
+
+```bash
+gpioget gpiochip1 20
+```
+
+Example: Display button state on the LED
+
+```bash
+while true; do gpiomon --num-events=1 gpiochip1 20; gpioset gpiochip1 19=$(gpioget gpiochip1 20); done
+# Stop with ctrl+z (suspend process) and "kill %%" (kill last suspended process)
+```
+
 There are two firmware variants. On with GPIOs and interfaces and one with GPIOs only. The gpiochip
 line numbers depend on the firmware variant:
 
-| Pico pin GP_              | GP0 | GP1 | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* |
-|---------------------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|
-| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |    - |    - |   16 |   17 |    - |    - |   18 |    - |    - |    - |    19 |
-| gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |   24 |   25 |    26 |
+| Pico pin GP_              | GP0 | GP1 | GP2 | GP3 | GP4 | GP5 | GP6 | GP7 | GP8 | GP9 | GP10 | GP11 | GP12 | GP13 | GP14 | GP15 | GP16 | GP17 | GP18 | GP19 | GP20 | GP21 | GP22 | GP26 | GP27 | GP28 | GP25* | Button** |
+|---------------------------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|----------|
+| gpiochip line             |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |    - |    - |   16 |   17 |    - |    - |   18 |    - |    - |    - |    19 |       20 |
+| gpiochip line (GPIO-only) |   0 |   1 |   2 |   3 |   4 |   5 |   6 |   7 |   8 |   9 |   10 |   11 |   12 |   13 |   14 |   15 |   16 |   17 |   18 |   19 |   20 |   21 |   22 |   23 |   24 |   25 |    26 |       27 |
 
 *GP25 is connected to the LED
+
+**Button is not connected via GPIOs, can only be read. Trying to set it will return the errno:
+`EREMOTEIO 121 Remote I/O error`
 
 #### Using multiple devices
 
