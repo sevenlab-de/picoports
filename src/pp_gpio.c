@@ -4,11 +4,17 @@
  */
 #include "tusb.h"
 
+#include "bsp/board_api.h"
+
 #include "hardware/gpio.h"
 
 #include "byte_ops.h"
 #include "dln2.h"
 #include "main.h"
+
+#ifdef PP_BTN_BOOTSEL
+#include "pico/bootrom.h"
+#endif
 
 static uint8_t gpio_pins[] = {
 #ifndef PP_LOG_ON_GP01
@@ -214,9 +220,22 @@ static bool take_pin_event(uint16_t *pin)
 	return false;
 }
 
+void check_button(void)
+{
+#ifdef PP_BTN_BOOTSEL
+	if (board_button_read() == 1) {
+		while (board_button_read() == 1)
+			;
+		rom_reset_usb_boot_extra(-1, 0, 0);
+	}
+#endif
+}
+
 void pp_gpio_task(void)
 {
 	uint16_t pin;
+
+	check_button();
 
 	if (!take_pin_event(&pin))
 		return;
