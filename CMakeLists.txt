@@ -33,7 +33,7 @@ target_include_directories(picoports PUBLIC
 
 target_link_libraries(picoports PUBLIC hardware_adc)
 
-option(GPIO_ONLY "Disable the ADC and I2C")
+option(GPIO_ONLY "Disable interfaces, use all pins as GPIOs")
 if(GPIO_ONLY)
 target_compile_definitions(picoports PUBLIC PP_GPIO_ONLY=1)
 else()
@@ -49,4 +49,10 @@ target_compile_definitions(picoports PUBLIC PP_LOG_ON_GP01=1)
 else()
 # Must be after call to family_configure_device_example().
 pico_enable_stdio_uart(picoports 0)
+endif()
+
+option(BOOTSEL_BUTTON "Pressing the button resets the pico into BOOTSEL mode")
+if(BOOTSEL_BUTTON)
+target_link_libraries(picoports PUBLIC pico_bootrom)
+target_compile_definitions(picoports PUBLIC PP_BTN_BOOTSEL=1)
 endif()
