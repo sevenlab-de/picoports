@@ -181,13 +181,19 @@ Note: Many systems provide a symlink of the form
 `/dev/ttyACM*`.
 
 Example: Open a serial terminal to interact with the UART (using tty device `/dev/ttyACM0` and `tio`
-tool)
+tool with default setting 115200:8n1)
 
 ```bash
 tio /dev/ttyACM0
 ```
 
-Note: Currently UART uses 115200 baud (8n1) only (TODO).
+Example: Use custom UART settings (using tty device `/dev/ttyACM0` and `tio` tool)
+
+```bash
+tio /dev/ttyACM0 --baudrate 9600 --parity odd --stopbits 2 --databits 7
+```
+
+(supported parity: none, even, odd; supported stopbits: 1, 2; supported databits: 5, 6, 7, 8)
 
 UART is only available in the full firmware variant (not in the `GPIO-only` variant).
 
