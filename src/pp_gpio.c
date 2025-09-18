@@ -4,11 +4,17 @@
  */
 #include "tusb.h"
 
+#include "bsp/board_api.h"
+
 #include "hardware/gpio.h"
 
 #include "byte_ops.h"
 #include "dln2.h"
 #include "main.h"
+
+#ifdef PP_BTN_BOOTSEL
+#include "pico/bootrom.h"
+#endif
 
 static uint8_t gpio_pins[] = {
 #ifndef PP_LOG_ON_GP01
@@ -29,7 +35,11 @@ static uint8_t gpio_pins[] = {
 	25 // Pico LED
 };
 
+#ifdef PP_BTN_BOOTSEL
 #define NUM_GPIOS TU_ARRAY_SIZE(gpio_pins)
+#else
+#define NUM_GPIOS (TU_ARRAY_SIZE(gpio_pins) + 1)
+#endif
 
 TU_ATTR_UNUSED static const char *gpio_cmd2str(uint16_t cmd)
 {
@@ -80,6 +90,30 @@ TU_ATTR_UNUSED static const char *gpio_dir2str(uint8_t pin_dir)
 	// clang-format on
 }
 
+bool is_gpio_button_pin(uint16_t pin)
+{
+#ifdef PP_BTN_BOOTSEL
+	(void)pin;
+
+	return false;
+#else
+	return pin == NUM_GPIOS - 1;
+#endif
+}
+
+#ifndef PP_BTN_BOOTSEL
+static bool gpio_btn_evt_en = false;
+#endif
+
+void enable_gpio_button_event(bool enable)
+{
+#ifdef PP_BTN_BOOTSEL
+	(void)enable;
+#else
+	gpio_btn_evt_en = enable;
+#endif
+}
+
 #define INVALID_PIN UINT16_MAX
 #define INVALID_VAL UINT8_MAX
 
@@ -93,13 +127,18 @@ static bool handle_request(uint16_t cmd, uint16_t *pin, uint8_t *val)
 		break;
 	case DLN2_GPIO_PIN_GET_VAL:
 		TU_VERIFY(*pin < NUM_GPIOS);
-		*val = gpio_get(gpio_pins[*pin]);
+		if (is_gpio_button_pin(*pin)) {
+			*val = (uint8_t)board_button_read();
+		} else {
+			*val = gpio_get(gpio_pins[*pin]);
+		}
 		TU_LOG3("GPIO: Getting pin %u value: %u\r\n", *pin, *val);
 		break;
 	case DLN2_GPIO_PIN_SET_OUT_VAL:
 		TU_VERIFY(*pin < NUM_GPIOS);
 		TU_VERIFY(*val != INVALID_VAL);
 		TU_LOG3("GPIO: Setting pin %u value: %u\r\n", *pin, *val);
+		TU_VERIFY(!is_gpio_button_pin(*pin));
 		gpio_put(gpio_pins[*pin], *val);
 		break;
 	case DLN2_GPIO_PIN_ENABLE:
@@ -114,27 +153,45 @@ static bool handle_request(uint16_t cmd, uint16_t *pin, uint8_t *val)
 		TU_VERIFY(*pin < NUM_GPIOS);
 		TU_VERIFY(*val == DLN2_GPIO_DIRECTION_IN ||
 			  *val == DLN2_GPIO_DIRECTION_OUT);
-		gpio_set_dir(gpio_pins[*pin], *val == DLN2_GPIO_DIRECTION_OUT);
+		if (is_gpio_button_pin(*pin)) {
+			TU_VERIFY(*val == DLN2_GPIO_DIRECTION_IN);
+		} else {
+			gpio_set_dir(gpio_pins[*pin],
+				     *val == DLN2_GPIO_DIRECTION_OUT);
+		}
 		TU_LOG3("GPIO: Setting pin %u direction: %s\r\n", *pin,
 			gpio_dir2str(*val));
 		break;
 	case DLN2_GPIO_PIN_GET_DIRECTION:
 		TU_VERIFY(*pin < NUM_GPIOS);
-		*val = gpio_get_dir(gpio_pins[*pin]) ? DLN2_GPIO_DIRECTION_OUT :
-						       DLN2_GPIO_DIRECTION_IN;
+		if (is_gpio_button_pin(*pin)) {
+			*val = DLN2_GPIO_DIRECTION_IN;
+		} else {
+			*val = gpio_get_dir(gpio_pins[*pin]) ?
+				       DLN2_GPIO_DIRECTION_OUT :
+				       DLN2_GPIO_DIRECTION_IN;
+		}
 		TU_LOG3("GPIO: Getting pin %u direction: %s\r\n", *pin,
 			gpio_dir2str(*val));
 		break;
-	case DLN2_GPIO_PIN_SET_EVENT_CFG:
+	case DLN2_GPIO_PIN_SET_EVENT_CFG: {
 		/* The rising edge and falling edge triggers are not used by the kernel driver. */
+		TU_VERIFY(*pin < NUM_GPIOS);
 		TU_VERIFY(*val == DLN2_GPIO_EVENT_NONE ||
 			  *val == DLN2_GPIO_EVENT_CHANGE);
 		TU_LOG3("GPIO: Setting event config for pin %u: type=%s (%u)\r\n",
 			*pin, gpio_type2str(*val), *val);
-		gpio_set_irq_enabled(gpio_pins[*pin],
-				     GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL,
-				     *val == DLN2_GPIO_EVENT_CHANGE);
+		bool enable = *val == DLN2_GPIO_EVENT_CHANGE;
+		if (is_gpio_button_pin(*pin)) {
+			enable_gpio_button_event(enable);
+		} else {
+			gpio_set_irq_enabled(gpio_pins[*pin],
+					     GPIO_IRQ_EDGE_RISE |
+						     GPIO_IRQ_EDGE_FALL,
+					     enable);
+		}
 		break;
+	}
 	default:
 		TU_VERIFY(false);
 	}
@@ -181,7 +238,7 @@ bool pp_gpio_handle_request(uint16_t cmd, uint8_t const *data_in,
 
 static bool gpio_id_events[TU_ARRAY_SIZE(gpio_pins)];
 
-static bool take_pin_event(uint16_t *pin)
+static bool has_pin_event(uint16_t *pin, uint8_t *val)
 {
 	uint16_t gpio_id;
 	bool event_found = false;
@@ -206,6 +263,7 @@ static bool take_pin_event(uint16_t *pin)
 	for (uint16_t i = 0; i < TU_ARRAY_SIZE(gpio_pins); i++) {
 		if (gpio_id == gpio_pins[i]) {
 			*pin = i;
+			*val = gpio_get(gpio_pins[*pin]);
 			return true;
 		}
 	}
@@ -214,11 +272,49 @@ static bool take_pin_event(uint16_t *pin)
 	return false;
 }
 
+static bool has_button_event(uint16_t *pin, uint8_t *val)
+{
+	static uint8_t prev_btn_state = 0;
+	uint8_t curr_btn_state = (uint8_t)board_button_read();
+
+	if (curr_btn_state != prev_btn_state) {
+		prev_btn_state = curr_btn_state;
+#ifdef PP_BTN_BOOTSEL
+		(void)pin;
+		(void)val;
+
+		/* Reboot the device into BOOTSEL mode. (noreturn) */
+		rom_reset_usb_boot_extra(-1, 0, 0);
+#else
+		if (gpio_btn_evt_en) {
+			*pin = NUM_GPIOS - 1;
+			*val = curr_btn_state;
+			return true;
+		}
+#endif
+	}
+	return false;
+}
+
+void check_button(void)
+{
+#ifdef PP_BTN_BOOTSEL
+	if (board_button_read() == 1) {
+		while (board_button_read() == 1)
+			;
+		rom_reset_usb_boot_extra(-1, 0, 0);
+	}
+#endif
+}
+
 void pp_gpio_task(void)
 {
 	uint16_t pin;
+	uint8_t val;
 
-	if (!take_pin_event(&pin))
+	check_button();
+
+	if (!has_button_event(&pin, &val) && !has_pin_event(&pin, &val))
 		return;
 
 	// Event payload:
@@ -231,7 +327,7 @@ void pp_gpio_task(void)
 	u16_to_buf_le(&data[0], 0); // Unused by kernel driver
 	data[2] = 0; // Unused by kernel driver
 	u16_to_buf_le(&data[3], pin);
-	data[5] = gpio_get(gpio_pins[pin]);
+	data[5] = val;
 
 	// unsolicited message, so no echo code
 	send_message_delayed(DLN2_GPIO_CONDITION_MET_EV, 0, DLN2_HANDLE_EVENT,
@@ -249,7 +345,7 @@ static void gpio_callback(unsigned int gpio_id, uint32_t event_mask)
 
 void pp_gpio_init(void)
 {
-	for (uint8_t i = 0; i < NUM_GPIOS; i++) {
+	for (uint8_t i = 0; i < TU_ARRAY_SIZE(gpio_pins); i++) {
 		gpio_init(gpio_pins[i]);
 	}
 	gpio_set_irq_callback(gpio_callback);

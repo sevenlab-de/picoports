@@ -14,22 +14,7 @@
 #include "pp_i2c.h"
 #include "pp_uart.h"
 
-#ifdef PP_BTN_BOOTSEL
-#include "pico/bootrom.h"
-#endif
-
 static void send_delayed_messages(void);
-
-void check_button(void)
-{
-#ifdef PP_BTN_BOOTSEL
-	if (board_button_read() == 1) {
-		while (board_button_read() == 1)
-			;
-		rom_reset_usb_boot_extra(-1, 0, 0);
-	}
-#endif
-}
 
 int main(void)
 {
@@ -53,7 +38,6 @@ int main(void)
 		pp_gpio_task();
 		pp_uart_task();
 		send_delayed_messages();
-		check_button();
 	}
 }
 
