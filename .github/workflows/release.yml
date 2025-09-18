@@ -27,17 +27,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Normalize firmware names
         run: |
           ls -l artifacts/
           mv \
             artifacts/picoports__GPIO_ONLY=false*.uf2 \
-            artifacts/picoports.uf2
+            artifacts/picoports_${{github.ref_name}}.uf2
           mv \
             artifacts/picoports__GPIO_ONLY=true*.uf2 \
-            artifacts/picoports_GPIO-only.uf2
-          rename -v 's/^picoports/picoports_${{github.ref_name}}/' artifacts/*
+            artifacts/picoports_${{github.ref_name}}_GPIO-only.uf2
           ls -l artifacts/
 
       - name: Create Release
@@ -49,6 +49,6 @@ jobs:
 
             - `picoports_${{github.ref_name}}.uf2` all features as described in the Readme
             - `picoports_${{github.ref_name}}_GPIO-only.uf2` features only GPIOs
-          files:
+          files: |
             artifacts/picoports_${{github.ref_name}}.uf2
             artifacts/picoports_${{github.ref_name}}_GPIO-only.uf2
