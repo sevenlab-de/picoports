@@ -270,3 +270,13 @@ works similarly to the `spidev` device driver, but in user space using `libusb`.
 ### Further resources
 
 - All one needs to know about USB: <https://www.beyondlogic.org/usbnutshell/usb1.shtml>
+
+### Licensing
+
+This project is licensed under GPL-2.0-only. See [license text](./LICENSE).
+
+### Trademark notice
+
+Raspberry Pi is a trademark of Raspberry Pi Ltd.
+
+PicoPorts runs on Raspberry Pi Pico.
