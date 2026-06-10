@@ -27,6 +27,30 @@ cp build/picoports.uf2 /media/$USER/RPI-RP2/
   flash accesses, which interferes with the SWD capabilities. The host software may occasionally
   show warnings and errors when this is enabled.
 
+## Reset into boot select mode
+
+On Linux, a running PicoPorts device (with firmware version >= `v2.2.0`) can be switched into
+firmware upgrade mode using `usb_modeswitch`:
+
+```shell
+usb_modeswitch -v 0xa257 -p 0x2013 -b ${BUS} -g ${DEVICE} -i 0 -m 0x01 -M 4649524d5741524555504752414445
+```
+
+The message payload is the ASCII string `FIRMWAREUPGRADE`.
+
+A helper script is provided at `scripts/picoports_firmware_upgrade.py`. When executing this script
+it tries to reset an attached PicoPorts device into firmware upgrade mode. If more than one
+PicoPorts device is attached, the USB serial number must be provided.
+
+This feature needs privileged access on the host. The udev rule `60-dln2-plugdev-access.rules`
+grants this for all users in the `plugdev` group. You can install it with:
+
+```bash
+sudo cp 60-dln2-plugdev-access.rules /etc/udev/rules.d/
+sudo udevadm control --reload
+sudo udevadm trigger
+```
+
 ## Theory of operation
 
 PicoPorts works without a custom driver, because it's using a driver that already exists. The driver
