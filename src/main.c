@@ -194,12 +194,14 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 
 void tud_vendor_rx_cb(uint8_t itf, const uint8_t *buf_in, uint16_t buf_in_size)
 {
-	(void)itf;
-
 	TU_LOG3("main: buf_in = ");
 	TU_LOG3_BUF(buf_in, buf_in_size);
 
+	if (itf != 0)
+		goto out;
+
 	handle_rx_data(buf_in, buf_in_size);
 
-	tud_vendor_read_flush();
+out:
+	tud_vendor_n_read_flush(itf);
 }
