@@ -7,8 +7,10 @@
 
 #include "dln2.h"
 
+// TinyUSB names the Raspberry Pi RP-series USB backend OPT_MCU_RP2040.
+// That backend is used for both Pico 1 and Pico 2 builds.
 #if CFG_TUSB_MCU != OPT_MCU_RP2040
-#error Only rp2040 is supported!
+#error PicoPorts requires the TinyUSB Raspberry Pi RP-series USB backend
 #endif
 
 #define CFG_TUSB_RHPORT0_MODE OPT_MODE_DEVICE
