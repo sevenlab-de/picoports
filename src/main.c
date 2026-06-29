@@ -4,10 +4,13 @@
  */
 #include "tusb.h"
 
+#include <string.h>
+
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include "bsp/board_api.h"
+#include "pico/bootrom.h"
 
 #include "byte_ops.h"
 #include "dln2.h"
@@ -17,6 +20,16 @@
 #include "pp_i2c.h"
 
 static void send_delayed_messages(void);
+
+#define FIRMWARE_UPGRADE_MAGIC "FIRMWAREUPGRADE"
+#define FIRMWARE_UPGRADE_MAGIC_LEN (sizeof(FIRMWARE_UPGRADE_MAGIC) - 1)
+
+static bool is_firmware_upgrade_request(const uint8_t *buf, uint16_t buf_size)
+{
+	return buf_size == FIRMWARE_UPGRADE_MAGIC_LEN &&
+	       memcmp(buf, FIRMWARE_UPGRADE_MAGIC,
+		      FIRMWARE_UPGRADE_MAGIC_LEN) == 0;
+}
 
 void picoports_init(void)
 {
@@ -194,12 +207,19 @@ static bool handle_rx_data(const uint8_t *buf_in, uint16_t buf_in_size)
 
 void tud_vendor_rx_cb(uint8_t itf, const uint8_t *buf_in, uint16_t buf_in_size)
 {
-	(void)itf;
-
 	TU_LOG3("main: buf_in = ");
 	TU_LOG3_BUF(buf_in, buf_in_size);
 
+	if (itf != 0)
+		goto out;
+
+	if (is_firmware_upgrade_request(buf_in, buf_in_size)) {
+		tud_vendor_n_read_flush(itf);
+		rom_reset_usb_boot_extra(-1, 0, 0);
+	}
+
 	handle_rx_data(buf_in, buf_in_size);
 
-	tud_vendor_read_flush();
+out:
+	tud_vendor_n_read_flush(itf);
 }

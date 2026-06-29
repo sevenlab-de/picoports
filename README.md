@@ -33,6 +33,9 @@ Original image from [official Raspberry Pi documentation](https://datasheets.ras
    2. Plug the Pico into your PC, the Pico will open as thumb drive
    3. Copy the firmware onto the Pico thumb drive
 
+A running PicoPorts device (firmware v2.2.0 or newer) can also be switched into firmware
+upgrade mode [using `scripts/picoports_firmware_upgrade.py`](/docs/dev_setup.md#reset-into-boot-select-mode).
+
 ## Development
 
 See [Development Setup](./docs/dev_setup.md)

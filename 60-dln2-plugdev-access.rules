@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Copyright (c) 2026 sevenlab engineering GmbH
+#
+# Add read-write permissions to all picoports / dln2 devices.
+
+ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="a257", ATTRS{idProduct}=="2013", GROUP="plugdev", MODE="0660"

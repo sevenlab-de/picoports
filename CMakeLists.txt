@@ -39,6 +39,7 @@ target_include_directories(picoports PUBLIC
 )
 
 target_link_libraries(picoports PUBLIC
+  pico_bootrom
   pico_stdlib
   hardware_adc
   hardware_i2c
@@ -59,7 +60,6 @@ endif()
 
 option(BOOTSEL_BUTTON "Pressing the button resets the pico into BOOTSEL mode")
 if(BOOTSEL_BUTTON)
-target_link_libraries(picoports PUBLIC pico_bootrom)
 target_compile_definitions(picoports PUBLIC PP_BTN_BOOTSEL=1)
 endif()
 
